@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <!-- Fundo -->
+  <rect width="400" height="300" fill="#f0f8ff"/>
+  
+  <!-- Título -->
+  <text x="200" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#2c3e50">
+    Exemplo SVG para Teste
+  </text>
+  
+  <!-- Botão 1 -->
+  <rect x="50" y="80" width="120" height="40" fill="#3498db" rx="5"/>
+  <text x="110" y="105" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="white">
+    Botão 1
+  </text>
+  
+  <!-- Botão 2 -->
+  <rect x="230" y="80" width="120" height="40" fill="#e74c3c" rx="5"/>
+  <text x="290" y="105" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="white">
+    Botão 2
+  </text>
+  
+  <!-- Imagem/Ícone -->
+  <circle cx="110" cy="180" r="30" fill="#27ae60"/>
+  <text x="110" y="187" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="white">
+    🏠
+  </text>
+  
+  <!-- Banner -->
+  <rect x="180" y="150" width="170" height="60" fill="#9b59b6" rx="8"/>
+  <text x="265" y="175" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="white">
+    Área Promocional
+  </text>
+  <text x="265" y="195" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">
+    Clique Aqui!
+  </text>
+  
+  <!-- Rodapé -->
+  <rect x="0" y="250" width="400" height="50" fill="#34495e"/>
+  <text x="200" y="280" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#ecf0f1">
+    © 2025 - Exemplo de SVG Interativo
+  </text>
+</svg>

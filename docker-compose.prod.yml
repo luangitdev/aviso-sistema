@@ -1,0 +1,23 @@
+services:
+  svg-app:
+    environment:
+      - FLASK_ENV=production
+      - FLASK_DEBUG=0
+    restart: always
+    volumes:
+      # Em produção, manter apenas o volume de uploads
+      - ./uploads:/app/uploads
+      
+  # Nginx como proxy reverso (opcional)
+  nginx:
+    image: nginx:alpine
+    container_name: svg-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - svg-app
+    networks:
+      - svg-network
+    restart: always

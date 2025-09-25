@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Clickable Areas - Tornar áreas clicáveis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin-bottom: 10px;
+            font-size: 2.2em;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .upload-section {
+            border: 3px dashed #3498db;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .upload-section:hover {
+            border-color: #2980b9;
+            background: rgba(52, 152, 219, 0.1);
+        }
+        
+        .upload-section.dragover {
+            border-color: #27ae60;
+            background: rgba(46, 204, 113, 0.1);
+        }
+        
+        .upload-input {
+            display: none;
+        }
+        
+        .upload-button {
+            background: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s ease;
+        }
+        
+        .upload-button:hover {
+            background: #2980b9;
+        }
+        
+        .workspace {
+            display: none;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .svg-container {
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            position: relative;
+            overflow: auto;
+            background: #f8f9fa;
+            min-height: 400px;
+        }
+        
+        .svg-display {
+            cursor: crosshair;
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .selection-overlay {
+            position: absolute;
+            border: 2px dashed #e74c3c;
+            background: rgba(231, 76, 60, 0.1);
+            pointer-events: none;
+            display: none;
+        }
+        
+        .controls {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .controls h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #495057;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        .button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .button-primary {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .button-primary:hover {
+            background: #229954;
+        }
+        
+        .button-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .button-secondary:hover {
+            background: #7f8c8d;
+        }
+        
+        .button-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .button-danger:hover {
+            background: #c0392b;
+        }
+        
+        .areas-list {
+            margin-top: 20px;
+        }
+        
+        .area-item {
+            background: white;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+        
+        .area-item small {
+            color: #6c757d;
+            display: block;
+            margin-top: 5px;
+        }
+        
+        .remove-area {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .download-section {
+            text-align: center;
+            margin-top: 20px;
+            padding: 20px;
+            background: #e8f5e8;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .download-button {
+            background: #28a745;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.3s ease;
+        }
+        
+        .download-button:hover {
+            background: #218838;
+        }
+        
+        .db-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px solid #dee2e6;
+            display: none;
+        }
+        
+        .db-section h3 {
+            color: #495057;
+            margin-bottom: 20px;
+        }
+        
+        .db-section h4 {
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+        
+        .db-result {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ced4da;
+            margin-bottom: 20px;
+        }
+        
+        .db-test {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ced4da;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #c3e6cb;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .workspace {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                margin: 10px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 SVG Clickable Areas</h1>
+            <p>Torne qualquer área da sua imagem SVG clicável de forma fácil e rápida</p>
+        </div>
+        
+        <div class="content">
+            <div id="status" class="status"></div>
+            
+            <div class="upload-section" id="uploadSection">
+                <h3>📁 Faça upload do seu arquivo SVG</h3>
+                <p style="margin: 15px 0; color: #7f8c8d;">
+                    Arraste e solte seu arquivo SVG aqui ou clique para selecionar
+                </p>
+                <input type="file" id="fileInput" class="upload-input" accept=".svg" />
+                <button class="upload-button" onclick="document.getElementById('fileInput').click()">
+                    Selecionar Arquivo SVG
+                </button>
+            </div>
+            
+            <div class="workspace" id="workspace">
+                <div class="svg-container" id="svgContainer">
+                    <div id="svgDisplay"></div>
+                    <div class="selection-overlay" id="selectionOverlay"></div>
+                </div>
+                
+                <div class="controls">
+                    <h3>🔗 Configurar Área Clicável</h3>
+                    
+                    <div class="form-group">
+                        <label for="urlInput">URL de destino:</label>
+                        <input type="url" id="urlInput" placeholder="https://exemplo.com" />
+                    </div>
+                    
+                    <button class="button button-primary" id="addAreaBtn" disabled>
+                        ➕ Adicionar Área
+                    </button>
+                    
+                    <button class="button button-secondary" id="clearSelectionBtn" disabled>
+                        🗑️ Limpar Seleção
+                    </button>
+                    
+                    <div class="areas-list">
+                        <h4>📋 Áreas Configuradas:</h4>
+                        <div id="areasList"></div>
+                    </div>
+                    
+                    <button class="button button-primary" id="generateBtn" disabled>
+                        🚀 Gerar SVG com Links
+                    </button>
+                    
+                    <button class="button button-secondary" id="generateForDbBtn" disabled>
+                        🗄️ Gerar para Banco de Dados
+                    </button>
+                    
+                    <button class="button button-danger" id="resetBtn">
+                        🔄 Recomeçar
+                    </button>
+                </div>
+            </div>
+            
+            <div class="download-section" id="downloadSection">
+                <h3>✅ SVG gerado com sucesso!</h3>
+                <p>Seu arquivo SVG com áreas clicáveis está pronto para download.</p>
+                <a href="#" class="download-button" id="downloadBtn">
+                    📥 Baixar SVG Modificado
+                </a>
+            </div>
+            
+            <div class="db-section" id="dbSection">
+                <h3>🗄️ Trabalhar com Banco de Dados</h3>
+                
+                <div class="db-result" id="dbResult" style="display: none;">
+                    <h4>SVG processado para armazenamento no banco:</h4>
+                    <textarea id="svgForDb" readonly style="width: 100%; height: 150px; font-family: monospace; margin: 10px 0;"></textarea>
+                    <button class="button button-secondary" onclick="copySvgContent()">
+                        📋 Copiar Conteúdo
+                    </button>
+                    <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                        💡 Este conteúdo deve ser armazenado no seu banco de dados
+                    </p>
+                </div>
+                
+                <hr style="margin: 20px 0;">
+                
+                <div class="db-test">
+                    <h4>🧪 Testar SVG do Banco</h4>
+                    <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                        Cole aqui o conteúdo SVG armazenado no banco para gerar um arquivo completo:
+                    </p>
+                    <textarea id="svgFromDb" placeholder="Cole o conteúdo SVG do banco aqui..." 
+                             style="width: 100%; height: 100px; font-family: monospace; margin: 10px 0;"></textarea>
+                    <button class="button button-primary" onclick="downloadFromDb()">
+                        ⬇️ Baixar SVG Completo
+                    </button>
+                </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFile = null;
+        let currentSelection = null;
+        let areas = [];
+        let isSelecting = false;
+        let startX, startY;
+        
+        // Elementos DOM
+        const fileInput = document.getElementById('fileInput');
+        const uploadSection = document.getElementById('uploadSection');
+        const workspace = document.getElementById('workspace');
+        const svgContainer = document.getElementById('svgContainer');
+        const svgDisplay = document.getElementById('svgDisplay');
+        const selectionOverlay = document.getElementById('selectionOverlay');
+        const urlInput = document.getElementById('urlInput');
+        const addAreaBtn = document.getElementById('addAreaBtn');
+        const clearSelectionBtn = document.getElementById('clearSelectionBtn');
+        const areasList = document.getElementById('areasList');
+        const generateBtn = document.getElementById('generateBtn');
+        const generateForDbBtn = document.getElementById('generateForDbBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const downloadSection = document.getElementById('downloadSection');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const dbSection = document.getElementById('dbSection');
+        const status = document.getElementById('status');
+        
+        // Event listeners
+        fileInput.addEventListener('change', handleFileUpload);
+        uploadSection.addEventListener('click', () => fileInput.click());
+        uploadSection.addEventListener('dragover', handleDragOver);
+        uploadSection.addEventListener('drop', handleDrop);
+        uploadSection.addEventListener('dragleave', handleDragLeave);
+        
+        svgContainer.addEventListener('mousedown', startSelection);
+        svgContainer.addEventListener('mousemove', updateSelection);
+        svgContainer.addEventListener('mouseup', endSelection);
+        
+        addAreaBtn.addEventListener('click', addArea);
+        clearSelectionBtn.addEventListener('click', clearSelection);
+        generateBtn.addEventListener('click', generateClickableAreas);
+        generateForDbBtn.addEventListener('click', generateForDatabase);
+        resetBtn.addEventListener('click', reset);
+        
+        // Funções de upload
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadSection.classList.add('dragover');
+        }
+        
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+        }
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.type === 'image/svg+xml' || file.name.endsWith('.svg')) {
+                    fileInput.files = files;
+                    handleFileUpload();
+                } else {
+                    showStatus('Apenas arquivos SVG são permitidos.', 'error');
+                }
+            }
+        }
+        
+        function handleFileUpload() {
+            const file = fileInput.files[0];
+            if (!file) return;
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            showStatus('Carregando arquivo...', 'success');
+            
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentFile = data.filename;
+                    displaySVG(data.content);
+                    uploadSection.style.display = 'none';
+                    workspace.style.display = 'grid';
+                    showStatus('Arquivo carregado com sucesso! Selecione uma área para tornar clicável.', 'success');
+                } else {
+                    showStatus(data.error, 'error');
+                }
+            })
+            .catch(error => {
+                showStatus('Erro ao carregar arquivo: ' + error.message, 'error');
+            });
+        }
+        
+        function displaySVG(content) {
+            svgDisplay.innerHTML = content;
+            const svg = svgDisplay.querySelector('svg');
+            if (svg) {
+                svg.style.maxWidth = '100%';
+                svg.style.height = 'auto';
+                svg.classList.add('svg-display');
+            }
+        }
+        
+        // Funções de seleção
+        function startSelection(e) {
+            if (e.target.tagName.toLowerCase() === 'svg' || e.target.closest('svg')) {
+                isSelecting = true;
+                const rect = svgContainer.getBoundingClientRect();
+                startX = e.clientX - rect.left;
+                startY = e.clientY - rect.top;
+                
+                selectionOverlay.style.left = startX + 'px';
+                selectionOverlay.style.top = startY + 'px';
+                selectionOverlay.style.width = '0px';
+                selectionOverlay.style.height = '0px';
+                selectionOverlay.style.display = 'block';
+            }
+        }
+        
+        function updateSelection(e) {
+            if (!isSelecting) return;
+            
+            const rect = svgContainer.getBoundingClientRect();
+            const currentX = e.clientX - rect.left;
+            const currentY = e.clientY - rect.top;
+            
+            const width = Math.abs(currentX - startX);
+            const height = Math.abs(currentY - startY);
+            const left = Math.min(startX, currentX);
+            const top = Math.min(startY, currentY);
+            
+            selectionOverlay.style.left = left + 'px';
+            selectionOverlay.style.top = top + 'px';
+            selectionOverlay.style.width = width + 'px';
+            selectionOverlay.style.height = height + 'px';
+        }
+        
+        function endSelection(e) {
+            if (!isSelecting) return;
+            
+            isSelecting = false;
+            
+            const rect = svgContainer.getBoundingClientRect();
+            const currentX = e.clientX - rect.left;
+            const currentY = e.clientY - rect.top;
+            
+            const width = Math.abs(currentX - startX);
+            const height = Math.abs(currentY - startY);
+            
+            if (width > 10 && height > 10) {
+                const left = Math.min(startX, currentX);
+                const top = Math.min(startY, currentY);
+                
+                currentSelection = {
+                    x: left,
+                    y: top,
+                    width: width,
+                    height: height
+                };
+                
+                addAreaBtn.disabled = false;
+                clearSelectionBtn.disabled = false;
+                showStatus('Área selecionada! Adicione uma URL e clique em "Adicionar Área".', 'success');
+            } else {
+                clearSelection();
+            }
+        }
+        
+        function clearSelection() {
+            selectionOverlay.style.display = 'none';
+            currentSelection = null;
+            addAreaBtn.disabled = true;
+            clearSelectionBtn.disabled = true;
+        }
+        
+        function addArea() {
+            const url = urlInput.value.trim();
+            if (!url) {
+                showStatus('Por favor, insira uma URL válida.', 'error');
+                return;
+            }
+            
+            if (!currentSelection) {
+                showStatus('Por favor, selecione uma área primeiro.', 'error');
+                return;
+            }
+            
+            const area = {
+                ...currentSelection,
+                url: url,
+                id: Date.now()
+            };
+            
+            areas.push(area);
+            updateAreasList();
+            clearSelection();
+            urlInput.value = '';
+            generateBtn.disabled = areas.length === 0;
+            generateForDbBtn.disabled = areas.length === 0;
+            
+            showStatus(`Área adicionada! Total: ${areas.length} área(s) configurada(s).`, 'success');
+        }
+        
+        function updateAreasList() {
+            areasList.innerHTML = '';
+            areas.forEach((area, index) => {
+                const div = document.createElement('div');
+                div.className = 'area-item';
+                div.innerHTML = `
+                    <strong>Área ${index + 1}</strong>
+                    <br>
+                    <a href="${area.url}" target="_blank">${area.url}</a>
+                    <small>Posição: (${Math.round(area.x)}, ${Math.round(area.y)}) - Tamanho: ${Math.round(area.width)}×${Math.round(area.height)}</small>
+                    <button class="remove-area" onclick="removeArea(${area.id})">×</button>
+                `;
+                areasList.appendChild(div);
+            });
+        }
+        
+        function removeArea(id) {
+            areas = areas.filter(area => area.id !== id);
+            updateAreasList();
+            generateBtn.disabled = areas.length === 0;
+            generateForDbBtn.disabled = areas.length === 0;
+            showStatus(`Área removida! Total: ${areas.length} área(s) configurada(s).`, 'success');
+        }
+        
+        function generateForDatabase() {
+            if (areas.length === 0) {
+                showStatus('Adicione pelo menos uma área antes de gerar o SVG para banco.', 'error');
+                return;
+            }
+            
+            showStatus('Gerando SVG para banco de dados...', 'success');
+            
+            fetch('/add_clickable_area_for_db', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    filename: currentFile,
+                    areas: areas
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('svgForDb').value = data.svg_content;
+                    document.getElementById('dbResult').style.display = 'block';
+                    dbSection.style.display = 'block';
+                    showStatus('SVG processado para banco com sucesso!', 'success');
+                } else {
+                    showStatus(data.error, 'error');
+                }
+            })
+            .catch(error => {
+                showStatus('Erro ao gerar SVG para banco: ' + error.message, 'error');
+            });
+        }
+        
+        function copySvgContent() {
+            const textarea = document.getElementById('svgForDb');
+            textarea.select();
+            document.execCommand('copy');
+            showStatus('✅ Conteúdo SVG copiado para área de transferência!', 'success');
+        }
+        
+        function downloadFromDb() {
+            const svgContent = document.getElementById('svgFromDb').value.trim();
+            
+            if (!svgContent) {
+                showStatus('Cole o conteúdo SVG do banco primeiro!', 'error');
+                return;
+            }
+            
+            fetch('/generate_complete_svg_from_db', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ svg_content: svgContent })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => Promise.reject(err));
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'svg_completo_do_banco.svg';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                showStatus('SVG baixado com sucesso!', 'success');
+            })
+            .catch(error => {
+                showStatus('Erro ao baixar SVG: ' + (error.error || error.message), 'error');
+            });
+        }
+        
+        function generateClickableAreas() {
+            if (areas.length === 0) {
+                showStatus('Adicione pelo menos uma área antes de gerar o SVG.', 'error');
+                return;
+            }
+            
+            showStatus('Gerando SVG com áreas clicáveis...', 'success');
+            
+            fetch('/add_clickable_area', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    filename: currentFile,
+                    areas: areas
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    downloadBtn.href = `/download/${data.modified_filename}`;
+                    downloadSection.style.display = 'block';
+                    showStatus('SVG gerado com sucesso!', 'success');
+                } else {
+                    showStatus(data.error, 'error');
+                }
+            })
+            .catch(error => {
+                showStatus('Erro ao gerar SVG: ' + error.message, 'error');
+            });
+        }
+        
+        function reset() {
+            currentFile = null;
+            currentSelection = null;
+            areas = [];
+            uploadSection.style.display = 'block';
+            workspace.style.display = 'none';
+            downloadSection.style.display = 'none';
+            dbSection.style.display = 'none';
+            clearSelection();
+            updateAreasList();
+            fileInput.value = '';
+            urlInput.value = '';
+            generateBtn.disabled = true;
+            generateForDbBtn.disabled = true;
+            status.style.display = 'none';
+        }
+        
+        function showStatus(message, type) {
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    status.style.display = 'none';
+                }, 5000);
+            }
+        }
+        
+        // Tornar funções globais para uso inline
+        window.removeArea = removeArea;
+        window.copySvgContent = copySvgContent;
+        window.downloadFromDb = downloadFromDb;
+    </script>
+</body>
+</html>

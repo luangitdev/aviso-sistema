@@ -1,0 +1,10 @@
+services:
+  svg-app:
+    volumes:
+      # Montar código para desenvolvimento (hot reload)
+      - .:/app
+      - /app/__pycache__  # Excluir cache Python
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+    command: python app.py

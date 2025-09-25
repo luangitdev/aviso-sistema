@@ -1,0 +1,37 @@
+services:
+  svg-app:
+    build: .
+    container_name: svg-clickable-areas
+    ports:
+      - "5001:5001"
+    volumes:
+      # Volume para persistir uploads temporários
+      - ./uploads:/app/uploads
+      # Volume para desenvolvimento (opcional)
+      - ./templates:/app/templates
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+    restart: unless-stopped
+    networks:
+      - svg-network
+
+  # Opcional: Adicionar banco de dados se necessário no futuro
+  # postgres:
+  #   image: postgres:15
+  #   container_name: svg-postgres
+  #   environment:
+  #     POSTGRES_DB: svg_app
+  #     POSTGRES_USER: svg_user
+  #     POSTGRES_PASSWORD: svg_password
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - svg-network
+
+networks:
+  svg-network:
+    driver: bridge
+
+# volumes:
+#   postgres_data:
