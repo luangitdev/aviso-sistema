@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SVG Clickable Areas - Tornar áreas clicáveis</title>
+    <title>SVG Clickable Areas - Tornar áreas clicáveis (SVG + PNG)</title>
     <style>
         * {
             margin: 0;
@@ -333,20 +333,21 @@
     <div class="container">
         <div class="header">
             <h1>🎯 SVG Clickable Areas</h1>
-            <p>Torne qualquer área da sua imagem SVG clicável de forma fácil e rápida</p>
+            <p>Torne qualquer área da sua imagem SVG ou PNG clicável de forma fácil e rápida</p>
         </div>
         
         <div class="content">
             <div id="status" class="status"></div>
             
             <div class="upload-section" id="uploadSection">
-                <h3>📁 Faça upload do seu arquivo SVG</h3>
+                <h3>📁 Faça upload do seu arquivo SVG ou PNG</h3>
                 <p style="margin: 15px 0; color: #7f8c8d;">
-                    Arraste e solte seu arquivo SVG aqui ou clique para selecionar
+                    Arraste e solte seu arquivo SVG ou PNG aqui ou clique para selecionar<br>
+                    <small style="color: #95a5a6;">PNG será automaticamente convertido para SVG</small>
                 </p>
-                <input type="file" id="fileInput" class="upload-input" accept=".svg" />
+                <input type="file" id="fileInput" class="upload-input" accept=".svg,.png" />
                 <button class="upload-button" onclick="document.getElementById('fileInput').click()">
-                    Selecionar Arquivo SVG
+                    📂 Selecionar Arquivo (SVG/PNG)
                 </button>
             </div>
             
@@ -490,11 +491,12 @@
             const files = e.dataTransfer.files;
             if (files.length > 0) {
                 const file = files[0];
-                if (file.type === 'image/svg+xml' || file.name.endsWith('.svg')) {
+                if (file.type === 'image/svg+xml' || file.name.endsWith('.svg') || 
+                    file.type === 'image/png' || file.name.endsWith('.png')) {
                     fileInput.files = files;
                     handleFileUpload();
                 } else {
-                    showStatus('Apenas arquivos SVG são permitidos.', 'error');
+                    showStatus('Apenas arquivos SVG e PNG são permitidos.', 'error');
                 }
             }
         }
@@ -519,7 +521,13 @@
                     displaySVG(data.content);
                     uploadSection.style.display = 'none';
                     workspace.style.display = 'grid';
-                    showStatus('Arquivo carregado com sucesso! Selecione uma área para tornar clicável.', 'success');
+                    
+                    // Mostrar mensagem específica para conversão PNG
+                    if (data.converted_from_png) {
+                        showStatus('🎉 PNG convertido para SVG com sucesso! Selecione uma área para tornar clicável.', 'success');
+                    } else {
+                        showStatus('Arquivo SVG carregado com sucesso! Selecione uma área para tornar clicável.', 'success');
+                    }
                 } else {
                     showStatus(data.error, 'error');
                 }

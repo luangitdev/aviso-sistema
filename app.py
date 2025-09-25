@@ -4,6 +4,9 @@ import tempfile
 from werkzeug.utils import secure_filename
 from lxml import etree
 import uuid
+import base64
+from PIL import Image
+import io
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
@@ -13,11 +16,72 @@ app.config['SECRET_KEY'] = 'svg-clickable-areas-secret-key'
 # Criar pasta de uploads se não existir
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-ALLOWED_EXTENSIONS = {'svg'}
+ALLOWED_EXTENSIONS = {'svg', 'png'}
 
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def convert_png_to_svg(png_path, quality='high'):
+    """
+    Converte PNG para SVG embutindo a imagem como base64
+    
+    Args:
+        png_path (str): Caminho para o arquivo PNG
+        quality (str): Qualidade da conversão ('high', 'medium', 'low')
+        
+    Returns:
+        str: Conteúdo SVG com a imagem PNG embutida
+    """
+    try:
+        # Abrir imagem PNG
+        with Image.open(png_path) as img:
+            # Converter para RGB se necessário (remove transparência)
+            if img.mode in ('RGBA', 'LA'):
+                # Criar fundo branco para transparência
+                background = Image.new('RGB', img.size, (255, 255, 255))
+                if img.mode == 'RGBA':
+                    background.paste(img, mask=img.split()[-1])  # Usar canal alpha como máscara
+                else:
+                    background.paste(img)
+                img = background
+            elif img.mode != 'RGB':
+                img = img.convert('RGB')
+            
+            # Redimensionar se necessário baseado na qualidade
+            original_size = img.size
+            if quality == 'medium' and max(img.size) > 1200:
+                img.thumbnail((1200, 1200), Image.Resampling.LANCZOS)
+            elif quality == 'low' and max(img.size) > 800:
+                img.thumbnail((800, 800), Image.Resampling.LANCZOS)
+            
+            # Converter para base64
+            buffer = io.BytesIO()
+            img.save(buffer, format='PNG', optimize=True)
+            img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            
+            # Criar SVG wrapper
+            width, height = img.size
+            svg_content = f'''<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" 
+     width="{width}" height="{height}" 
+     viewBox="0 0 {width} {height}">
+  <title>Imagem convertida de PNG</title>
+  <image href="data:image/png;base64,{img_base64}" 
+         width="{width}" height="{height}" 
+         x="0" y="0"/>
+</svg>'''
+            
+            return svg_content
+            
+    except Exception as e:
+        raise Exception(f"Erro na conversão PNG para SVG: {str(e)}")
+
+def is_png_file(filename):
+    """
+    Verifica se o arquivo é PNG baseado na extensão
+    """
+    return filename.lower().endswith('.png')
 
 @app.route('/')
 def index():
@@ -41,25 +105,53 @@ def upload_file():
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
         
-        # Verificar se é um SVG válido
         try:
-            with open(filepath, 'r', encoding='utf-8') as f:
-                content = f.read()
+            # Verificar se é PNG e converter para SVG
+            if is_png_file(filename):
+                print(f"🖼️  Convertendo PNG para SVG: {filename}")
+                svg_content = convert_png_to_svg(filepath, quality='high')
+                
+                # Salvar SVG convertido
+                svg_filename = f"{name}_converted_{uuid.uuid4().hex[:8]}.svg"
+                svg_filepath = os.path.join(app.config['UPLOAD_FOLDER'], svg_filename)
+                
+                with open(svg_filepath, 'w', encoding='utf-8') as f:
+                    f.write(svg_content)
+                
+                # Remover PNG original para economizar espaço
+                os.remove(filepath)
+                
+                return jsonify({
+                    'success': True,
+                    'filename': svg_filename,
+                    'content': svg_content,
+                    'converted_from_png': True,
+                    'message': 'PNG convertido para SVG com sucesso!'
+                })
             
-            # Parse do SVG para verificar se é válido
-            parser = etree.XMLParser(recover=True)
-            etree.fromstring(content.encode('utf-8'), parser)
-            
-            return jsonify({
-                'success': True,
-                'filename': filename,
-                'content': content
-            })
+            # Processar SVG normal
+            else:
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                
+                # Parse do SVG para verificar se é válido
+                parser = etree.XMLParser(recover=True)
+                etree.fromstring(content.encode('utf-8'), parser)
+                
+                return jsonify({
+                    'success': True,
+                    'filename': filename,
+                    'content': content,
+                    'converted_from_png': False
+                })
+                
         except Exception as e:
-            os.remove(filepath)
-            return jsonify({'error': f'Arquivo SVG inválido: {str(e)}'}), 400
+            # Remover arquivo em caso de erro
+            if os.path.exists(filepath):
+                os.remove(filepath)
+            return jsonify({'error': f'Erro ao processar arquivo: {str(e)}'}), 400
     
-    return jsonify({'error': 'Tipo de arquivo não permitido. Apenas arquivos SVG são aceitos.'}), 400
+    return jsonify({'error': 'Tipo de arquivo não permitido. Apenas arquivos SVG e PNG são aceitos.'}), 400
 
 @app.route('/add_clickable_area', methods=['POST'])
 def add_clickable_area():
