@@ -1,6 +1,7 @@
 # 🚀 Deploy no Render - SVG Clickable Areas
-
-## 📋 Pré-requisitos
+3. Configure:
+   - **Name**: `svg-avisosistema`
+   - **Environment**: `Python 3` 📋 Pré-requisitos
 
 1. **Conta no Render**: https://render.com
 2. **Repositório GitHub**: Código deve estar no GitHub
@@ -43,7 +44,7 @@ git push origin main
 2. Clique em **"New +"** → **"Web Service"**
 3. Conecte seu repositório GitHub
 4. Configure:
-   - **Name**: `svg-clickable-areas`
+   - **Name**: `svg-avisosistema`
    - **Environment**: `Python 3`
    - **Build Command**: *(deixe vazio - automático)*
    - **Start Command**: `gunicorn app:app`
@@ -63,7 +64,7 @@ FLASK_ENV=production
 
 ## 🌐 Após Deploy
 
-- **URL**: `https://svg-clickable-areas-XXXX.onrender.com`
+- **URL**: `https://svg-avisosistema-XXXX.onrender.com`
 - **Status**: Monitorar no dashboard do Render
 - **Logs**: Disponíveis no painel de controle
 
