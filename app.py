@@ -120,6 +120,13 @@ def normalize_url(url):
 def index():
     return render_template('index.html')
 
+@app.route('/static/<filename>')
+def serve_static(filename):
+    """
+    Serve arquivos estáticos (imagens, etc.)
+    """
+    return send_file(filename, as_attachment=False)
+
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
