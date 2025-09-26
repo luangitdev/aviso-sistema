@@ -83,6 +83,39 @@ def is_png_file(filename):
     """
     return filename.lower().endswith('.png')
 
+def normalize_url(url):
+    """
+    Normaliza URLs para garantir que sejam absolutos
+    
+    Args:
+        url (str): URL para normalizar
+        
+    Returns:
+        str: URL normalizado com protocolo
+    """
+    if not url:
+        return url
+    
+    url = url.strip()
+    
+    # Se já tem protocolo, retorna como está
+    if url.startswith(('http://', 'https://', 'ftp://', 'mailto:', 'tel:')):
+        return url
+    
+    # Se começa com //, adiciona https:
+    if url.startswith('//'):
+        return 'https:' + url
+    
+    # Para domínios comuns, adiciona https://
+    if any(url.startswith(domain) for domain in [
+        'www.', 'google.com', 'facebook.com', 'instagram.com', 'twitter.com',
+        'linkedin.com', 'youtube.com', 'github.com', 'stackoverflow.com'
+    ]) or ('.' in url and not url.startswith('/')):
+        return 'https://' + url
+    
+    # Para caminhos relativos ou outros casos, mantém como está
+    return url
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -192,7 +225,7 @@ def add_clickable_area():
             y = float(area['y'])
             width = float(area['width'])
             height = float(area['height'])
-            url = area['url']
+            url = normalize_url(area['url'])  # Normalizar URL
             
             # Criar elemento <a> SEM namespace xlink
             a_elem = etree.Element('{http://www.w3.org/2000/svg}a')
@@ -286,7 +319,7 @@ def add_clickable_area_for_db():
             y = float(area['y'])
             width = float(area['width'])
             height = float(area['height'])
-            url = area['url']
+            url = normalize_url(area['url'])  # Normalizar URL
             
             # Criar elemento <a> no formato correto
             a_elem = etree.Element('{http://www.w3.org/2000/svg}a')
