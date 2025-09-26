@@ -13,8 +13,11 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['SECRET_KEY'] = 'svg-clickable-areas-secret-key'
 
-# Criar pasta de uploads se não existir
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+# Criar pasta de uploads se não existir (importante para Render)
+upload_folder = app.config['UPLOAD_FOLDER']
+if not os.path.exists(upload_folder):
+    os.makedirs(upload_folder, exist_ok=True)
+    print(f"📁 Pasta {upload_folder} criada para uploads")
 
 ALLOWED_EXTENSIONS = {'svg', 'png'}
 
@@ -472,9 +475,9 @@ if __name__ == '__main__':
     import os
     
     # Obter configurações do ambiente
-    debug_mode = os.getenv('FLASK_DEBUG', '1') == '1'
+    debug_mode = os.getenv('FLASK_DEBUG', '0') == '1'  # Produção por padrão
     host = os.getenv('FLASK_HOST', '0.0.0.0')
-    port = int(os.getenv('FLASK_PORT', '5001'))
+    port = int(os.getenv('PORT', os.getenv('FLASK_PORT', '5001')))  # Render usa PORT
     
     print(f"🚀 Iniciando aplicação SVG Clickable Areas")
     print(f"🌐 Host: {host}:{port}")
