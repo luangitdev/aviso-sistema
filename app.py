@@ -355,6 +355,67 @@ def generate_complete_svg_from_db():
     except Exception as e:
         return jsonify({'error': f'Erro ao gerar SVG: {str(e)}'}), 500
 
+@app.route('/generate_sql_insert', methods=['POST'])
+def generate_sql_insert():
+    """
+    Gera comando SQL INSERT com o conteúdo SVG embutido
+    """
+    try:
+        data = request.get_json()
+        filename = data.get('filename')
+        assunto = data.get('assunto', 'COMUNICADO')
+        custom_date = data.get('data_criacao')
+        
+        if not filename:
+            return jsonify({'error': 'Nome do arquivo não fornecido'}), 400
+        
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if not os.path.exists(filepath):
+            return jsonify({'error': 'Arquivo não encontrado'}), 404
+        
+        # Ler o SVG
+        with open(filepath, 'r', encoding='utf-8') as f:
+            svg_content = f.read()
+        
+        # Extrair apenas a tag SVG (sem declaração XML)
+        if svg_content.startswith('<?xml'):
+            # Encontrar onde começa a tag <svg>
+            svg_start = svg_content.find('<svg')
+            if svg_start != -1:
+                svg_content = svg_content[svg_start:]
+        
+        # Escapar aspas simples para SQL
+        svg_escaped = svg_content.replace("'", "''")
+        
+        # Gerar data atual se não fornecida
+        from datetime import datetime
+        if custom_date:
+            data_sql = custom_date
+        else:
+            data_sql = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        # Gerar comando SQL INSERT
+        sql_insert = f"""INSERT INTO public.avisosistema (assunto, atualizado, aviso, criacao) 
+VALUES ('{assunto}', '{data_sql}', '{svg_escaped}', '{data_sql}');"""
+        
+        # Salvar arquivo SQL
+        import time
+        sql_filename = f'insert_avisosistema_{int(time.time())}.sql'
+        sql_filepath = os.path.join(app.config['UPLOAD_FOLDER'], sql_filename)
+        
+        with open(sql_filepath, 'w', encoding='utf-8') as f:
+            f.write(sql_insert)
+        
+        return jsonify({
+            'success': True,
+            'sql_filename': sql_filename,
+            'sql_content': sql_insert,
+            'message': f'Comando SQL INSERT gerado com sucesso para tabela avisosistema'
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Erro ao gerar SQL INSERT: {str(e)}'}), 500
+
 @app.route('/download/<filename>')
 def download_file(filename):
     try:

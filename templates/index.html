@@ -398,6 +398,46 @@
                 <a href="#" class="download-button" id="downloadBtn">
                     📥 Baixar SVG Modificado
                 </a>
+                
+                <!-- Nova seção para INSERT SQL -->
+                <div class="sql-section" style="margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                    <h4>🗃️ Gerar INSERT SQL para Banco</h4>
+                    <p style="margin: 10px 0; color: #666;">
+                        Gere automaticamente o comando SQL INSERT para a tabela <code>avisosistema</code>
+                    </p>
+                    
+                    <div class="sql-form" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Assunto:</label>
+                            <input type="text" id="sqlAssunto" value="COMUNICADO" 
+                                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Data (opcional):</label>
+                            <input type="datetime-local" id="sqlData" 
+                                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                    </div>
+                    
+                    <button class="button button-primary" onclick="generateSqlInsert()" style="width: 100%;">
+                        🚀 Gerar INSERT SQL
+                    </button>
+                    
+                    <div id="sqlResult" style="display: none; margin-top: 15px;">
+                        <h5>📝 Comando SQL gerado:</h5>
+                        <textarea id="sqlContent" readonly 
+                                  style="width: 100%; height: 120px; font-family: monospace; font-size: 12px; 
+                                         border: 1px solid #ddd; border-radius: 4px; padding: 10px;"></textarea>
+                        <div style="margin-top: 10px;">
+                            <button class="button button-secondary" onclick="copySqlContent()">
+                                📋 Copiar SQL
+                            </button>
+                            <a href="#" class="button button-secondary" id="downloadSqlBtn" style="margin-left: 10px;">
+                                📥 Baixar arquivo .sql
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <div class="db-section" id="dbSection">
@@ -772,6 +812,8 @@
                 if (data.success) {
                     downloadBtn.href = `/download/${data.modified_filename}`;
                     downloadSection.style.display = 'block';
+                    // Armazenar o arquivo modificado para usar no SQL
+                    window.currentModifiedFile = data.modified_filename;
                     showStatus('SVG gerado com sucesso!', 'success');
                 } else {
                     showStatus(data.error, 'error');
@@ -811,10 +853,54 @@
             }
         }
         
+        // Função para gerar INSERT SQL
+        function generateSqlInsert() {
+            const assunto = document.getElementById('sqlAssunto').value || 'COMUNICADO';
+            const dataInput = document.getElementById('sqlData').value;
+            
+            showStatus('Gerando INSERT SQL...', 'success');
+            
+            fetch('/generate_sql_insert', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    filename: window.currentModifiedFile || currentFile, // Usar o arquivo modificado
+                    assunto: assunto,
+                    data_criacao: dataInput || null
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('sqlContent').value = data.sql_content;
+                    document.getElementById('downloadSqlBtn').href = `/download/${data.sql_filename}`;
+                    document.getElementById('sqlResult').style.display = 'block';
+                    showStatus('INSERT SQL gerado com sucesso!', 'success');
+                } else {
+                    showStatus(data.error, 'error');
+                }
+            })
+            .catch(error => {
+                showStatus('Erro ao gerar SQL: ' + error.message, 'error');
+            });
+        }
+        
+        // Função para copiar conteúdo SQL
+        function copySqlContent() {
+            const sqlContent = document.getElementById('sqlContent');
+            sqlContent.select();
+            document.execCommand('copy');
+            showStatus('Comando SQL copiado para a área de transferência!', 'success');
+        }
+
         // Tornar funções globais para uso inline
         window.removeArea = removeArea;
         window.copySvgContent = copySvgContent;
         window.downloadFromDb = downloadFromDb;
+        window.generateSqlInsert = generateSqlInsert;
+        window.copySqlContent = copySqlContent;
     </script>
 </body>
 </html>
