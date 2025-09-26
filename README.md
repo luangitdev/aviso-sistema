@@ -8,8 +8,20 @@
 
 **Instalação rápida:**
 ```bash
-# Clonar/baixar o projeto
-cd svg-clickable-areas
+# Clonar/baixar o proje## 🗄️ Integração com Banco de Dados
+
+A aplicação oferece funcionalidades específicas para trabalhar com bancos de dados:
+
+### **INSERT SQL Automático** ⭐ NOVO!
+1. Processe as áreas clicáveis normalmente
+2. Configure assunto e data na seção "Gerar INSERT SQL"
+3. Clique em **"🚀 Gerar INSERT SQL"**
+4. Baixe o arquivo `.sql` pronto para executar
+5. Execute no PostgreSQL: `INSERT INTO public.avisosistema...`
+
+### **Gerar SVG para Banco**
+1. Processe as áreas clicáveis normalmente
+2. Clique em **"Gerar para Banco de Dados"**vg-clickable-areas
 
 # Iniciar aplicação
 ./start.sh dev
@@ -36,11 +48,13 @@ python app.py
 
 ## 🚀 Funcionalidades
 
-- **Upload de SVG**: Arraste e solte ou selecione arquivos SVG
+- **Upload PNG/SVG**: Arraste e solte ou selecione arquivos SVG ou PNG
+- **Conversão Automática**: PNG é automaticamente convertido para SVG
 - **Seleção Visual**: Selecione áreas retangulares diretamente na imagem
-- **Adição de Links**: Configure URLs para cada área selecionada
+- **URLs Inteligentes**: Normalização automática de URLs (google.com → https://google.com)
 - **Preview em Tempo Real**: Visualize as áreas sendo configuradas
 - **Download Automático**: Baixe o SVG modificado com áreas clicáveis
+- **INSERT SQL**: Gere automaticamente comandos SQL para banco de dados
 - **Interface Responsiva**: Funciona em desktop e mobile
 
 ## 🛠️ Tecnologias
