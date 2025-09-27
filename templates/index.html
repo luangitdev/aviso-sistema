@@ -380,7 +380,7 @@
                     <small style="color: #95a5a6;">PNG será automaticamente convertido para SVG</small>
                 </p>
                 <input type="file" id="fileInput" class="upload-input" accept=".svg,.png" />
-                <button class="upload-button" onclick="document.getElementById('fileInput').click()">
+                <button class="upload-button" id="uploadButton">
                     📂 Selecionar Arquivo (SVG/PNG)
                 </button>
             </div>
@@ -532,10 +532,20 @@
         const downloadBtn = document.getElementById('downloadBtn');
         const dbSection = document.getElementById('dbSection');
         const status = document.getElementById('status');
+        const uploadButton = document.getElementById('uploadButton');
         
         // Event listeners
         fileInput.addEventListener('change', handleFileUpload);
-        uploadSection.addEventListener('click', () => fileInput.click());
+        uploadButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fileInput.click();
+        });
+        uploadSection.addEventListener('click', (e) => {
+            // Só dispara se não clicou no botão
+            if (e.target !== uploadButton && !uploadButton.contains(e.target)) {
+                fileInput.click();
+            }
+        });
         uploadSection.addEventListener('dragover', handleDragOver);
         uploadSection.addEventListener('drop', handleDrop);
         uploadSection.addEventListener('dragleave', handleDragLeave);
