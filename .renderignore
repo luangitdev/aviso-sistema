@@ -1,0 +1,43 @@
+# Arquivos que não precisam ir para o Render
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+.env
+.venv/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Desenvolvimento
+.git/
+.gitignore
+README.md
+CHANGELOG.md
+docker-compose.yml
+docker-compose.*.yml
+Dockerfile
+Makefile
+nginx.conf
+
+# Uploads temporários
+uploads/*.svg
+uploads/*.png
+uploads/*.sql
+
+# Logs
+*.log
+logs/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

@@ -16,15 +16,15 @@ web: gunicorn app:app
 
 ### `runtime.txt`  
 ```
-python-3.11.0
+python-3.11.9
 ```
 
 ### `requirements.txt` (atualizado)
 ```
-Flask==2.3.3
-Werkzeug==2.3.7
-lxml==4.9.3
-Pillow==10.0.1
+Flask==3.0.0
+Werkzeug==3.0.1
+lxml==5.1.0
+Pillow==10.4.0
 gunicorn==21.2.0
 ```
 
@@ -46,7 +46,7 @@ git push origin main
 4. Configure:
    - **Name**: `svg-avisosistema`
    - **Environment**: `Python 3`
-   - **Build Command**: *(deixe vazio - automático)*
+   - **Build Command**: `./build.sh` *(ou deixe vazio para automático)*
    - **Start Command**: `gunicorn app:app`
    - **Instance Type**: `Free` (para teste)
 
@@ -78,17 +78,33 @@ FLASK_ENV=production
 
 ## 🔧 Solução de Problemas
 
-### Erro de Build:
-- Verificar `requirements.txt`
-- Logs no painel Render
+### ❌ Erro de Build (KeyError: '__version__'):
+**Causa**: Incompatibilidade de versões ou Python muito novo
+**Solução**:
+1. Verificar se `runtime.txt` tem `python-3.11.9`
+2. Verificar se `requirements.txt` tem versões atualizadas
+3. Fazer novo commit e push
+4. Tentar redeploy no Render
 
-### Erro de Memória:
+### ❌ Erro "Getting requirements to build wheel":
+**Causa**: Dependências incompatíveis com Python 3.13+
+**Solução**:
+1. Usar Python 3.11.9 (já configurado)
+2. Versões testadas das dependências (já configurado)
+3. Clear build cache no Render
+
+### ❌ Erro de Memória:
 - Upgradar para plano pago
 - Otimizar processamento de imagens
 
-### Arquivos não servidos:
+### ❌ Arquivos não servidos:
 - Render serve automaticamente arquivos estáticos
 - Rota `/static/` configurada no Flask
+
+### 🔄 Forçar Rebuild:
+1. No Render Dashboard
+2. **Manual Deploy** → **Clear build cache**
+3. **Deploy latest commit**
 
 ## 💡 Dicas Importantes
 
